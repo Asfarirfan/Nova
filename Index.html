@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaAI - Text to Image Generator</title>
+    <style>
+        :root {
+            --primary: #2A2F4F;
+            --secondary: #917FB3;
+            --accent: #E5BEEC;
+            --light: #FDE2F3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: var(--primary);
+            padding: 1.2rem 5%;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 5%;
+        }
+
+        .generator-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .header-text {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header-text h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        #promptInput {
+            flex: 1;
+            padding: 1.2rem;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        #promptInput:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px rgba(145,127,179,0.2);
+        }
+
+        .generate-btn {
+            padding: 1.2rem 2.5rem;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(145,127,179,0.4);
+        }
+
+        /* Results Section */
+        #resultContainer {
+            margin-top: 2.5rem;
+            text-align: center;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin: 1.5rem 0;
+            transition: transform 0.3s ease;
+        }
+
+        .generated-image:hover {
+            transform: scale(1.02);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 3rem 5%;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            color: var(--accent);
+            margin-bottom: 1.2rem;
+            font-size: 1.3rem;
+        }
+
+        .footer-section p, .footer-section li {
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .generate-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="#" class="logo">NovaAI</a>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Gallery</a></li>
+                <li><a href="#">API Docs</a></li>
+                <li><a href="#">Support</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="generator-card">
+            <div class="header-text">
+                <h1>Transform Text to Images</h1>
+                <p>Create stunning visuals from text prompts</p>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="promptInput" placeholder="Enter your creative prompt here...">
+                <button class="generate-btn" onclick="generateImage()">Generate Art</button>
+            </div>
+            
+            <div class="loading-spinner" id="loader"></div>
+            <div id="resultContainer"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About NovaAI</h3>
+                <p>Leading AI-powered image generation platform transforming ideas into visual reality.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Documentation</a></li>
+                    <li><a href="#">Pricing</a></li>
+                    <li><a href="#">Status</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Content Policy</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const HF_TOKEN = "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";
+        const API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0";
+
+        async function generateImage() {
+            const prompt = document.getElementById('promptInput').value.trim();
+            const resultContainer = document.getElementById('resultContainer');
+            const loader = document.getElementById('loader');
+
+            if (!prompt) {
+                showNotification("Please enter a valid prompt", "error");
+                return;
+            }
+
+            loader.style.display = 'block';
+            resultContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${HF_TOKEN}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        inputs: prompt,
+                        parameters: {
+                            width: 1024,
+                            height: 1024,
+                            num_inference_steps: 50,
+                            guidance_scale: 7.5
+                        }
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Image generation failed');
+                }
+
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                
+                resultContainer.innerHTML = `
+                    <div class="image-wrapper">
+                        <img src="${imageUrl}" class="generated-image" alt="Generated artwork">
+                        <div class="image-actions">
+                            <button class="download-btn" onclick="downloadImage('${imageUrl}')">
+                                Download HD Image
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                showNotification(`Error: ${error.message}`, "error");
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function downloadImage(url) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `novaai-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '1rem 2rem';
+            notification.style.background = type === 'error' ? '#ff4444' : '#00C851';
+            notification.style.color = 'white';
+            notification.style.borderRadius = '8px';
+            notification.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
